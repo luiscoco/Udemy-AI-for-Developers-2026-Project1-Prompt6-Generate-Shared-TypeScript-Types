@@ -1,12 +1,21 @@
-# @equipment-hub/contract
+# Equipment Maintenance Hub
 
-This package turns `openapi.yaml` — the single source of truth for the API —
-into TypeScript types that both `apps/backend` and `apps/frontend` import.
-Neither app hand-writes its own copies of `WorkOrder`, `Asset`, etc.; they all
-come from here, so backend and frontend can never silently drift apart.
+This repo is an npm workspaces monorepo with three packages:
 
-This README walks through exactly how the package was built, step by step,
-so you can reproduce (or extend) the same setup yourself.
+- `apps/backend` — Fastify API (not implemented yet at this stage)
+- `apps/frontend` — React/Vite UI (not implemented yet at this stage)
+- `packages/contract` — the shared TypeScript contract, covered below
+
+## The `packages/contract` package
+
+`packages/contract` turns `packages/contract/openapi.yaml` — the single
+source of truth for the API — into TypeScript types that both
+`apps/backend` and `apps/frontend` import. Neither app hand-writes its own
+copies of `WorkOrder`, `Asset`, etc.; they all come from here, so backend
+and frontend can never silently drift apart.
+
+The rest of this README walks through exactly how that package was built,
+step by step, so you can reproduce (or extend) the same setup yourself.
 
 ## Running the app (Windows terminal)
 
@@ -33,11 +42,11 @@ will be updated with the real `npm run dev` command to launch both.
 
 ## Step 1 — Start from the spec
 
-`openapi.yaml` already existed before this package did. It describes every
-route (`/api/work-orders`, `/api/assets`, ...) and every schema
-(`WorkOrder`, `Asset`, `Technician`, ...) using standard OpenAPI 3.0 syntax.
-Nothing here was written by hand in TypeScript — it's all derived from this
-one file.
+`packages/contract/openapi.yaml` already existed before this package did.
+It describes every route (`/api/work-orders`, `/api/assets`, ...) and every
+schema (`WorkOrder`, `Asset`, `Technician`, ...) using standard OpenAPI 3.0
+syntax. Nothing here was written by hand in TypeScript — it's all derived
+from this one file.
 
 ## Step 2 — Scaffold the package
 
@@ -46,7 +55,8 @@ A workspace package needs a `package.json` that:
 - Names the package `@equipment-hub/contract`, matching the pattern the
   other workspaces already use (`@equipment-hub/backend`,
   `@equipment-hub/frontend`).
-- Points `exports["."]` **directly at `src/index.ts`**, with no build step:
+- Points `exports["."]` **directly at `packages/contract/src/index.ts`**,
+  with no build step:
 
   ```json
   {
@@ -75,7 +85,7 @@ npm install -D openapi-typescript --workspace=@equipment-hub/contract
 ## Step 4 — Generate the types
 
 The `gen` script runs the generator against the spec and writes the output
-to `src/types.gen.ts`:
+to `packages/contract/src/types.gen.ts`:
 
 ```json
 "scripts": {
@@ -89,8 +99,9 @@ To (re)generate the types, run:
 npm run gen --workspace=@equipment-hub/contract
 ```
 
-`src/types.gen.ts` is auto-generated and starts with a header saying so.
-**Never edit it by hand** — see [Why generated types are off-limits](#why-generated-types-are-off-limits)
+`packages/contract/src/types.gen.ts` is auto-generated and starts with a
+header saying so. **Never edit it by hand** — see
+[Why generated types are off-limits](#why-generated-types-are-off-limits)
 below.
 
 The output is a big file of nested `interface`/`type` declarations that
@@ -102,9 +113,9 @@ write `components["schemas"]["WorkOrder"]` all over the app.
 
 ## Step 5 — Add friendly aliases
 
-That's what `src/index.ts` is for. It's the package's *public* entry point
-(the thing `exports["."]` points to), and all it does is re-export short,
-readable names for the schemas apps actually need:
+That's what `packages/contract/src/index.ts` is for. It's the package's
+*public* entry point (the thing `exports["."]` points to), and all it does
+is re-export short, readable names for the schemas apps actually need:
 
 ```ts
 import type { components } from "./types.gen.js";
@@ -130,7 +141,7 @@ import type { WorkOrder, NewWorkOrder } from "@equipment-hub/contract";
 
 ## Step 6 — Verify it compiles
 
-A minimal `tsconfig.json` (extending the repo's shared
+A minimal `packages/contract/tsconfig.json` (extending the repo's shared
 `tsconfig.base.json`, with `noEmit: true` since this package never builds
 to JS) confirms `src/index.ts` type-checks cleanly:
 
@@ -140,8 +151,9 @@ npx tsc -p packages/contract/tsconfig.json --noEmit
 
 ## Why generated types are off-limits
 
-`src/types.gen.ts` is a **derived artifact**, not source code — its only
-source of truth is `openapi.yaml`. Editing it by hand causes real problems:
+`packages/contract/src/types.gen.ts` is a **derived artifact**, not source
+code — its only source of truth is `packages/contract/openapi.yaml`.
+Editing it by hand causes real problems:
 
 1. **It gets overwritten.** The next `npm run gen` regenerates the file from
    the spec and throws away any manual edit without warning. The bug you
@@ -160,5 +172,6 @@ source of truth is `openapi.yaml`. Editing it by hand causes real problems:
    Hand-editing generated output creates a second, competing source of
    truth that will eventually contradict the first.
 
-**The rule of thumb:** if you need a type to change, edit `openapi.yaml`,
-then run `npm run gen`. Never edit `src/types.gen.ts` directly.
+**The rule of thumb:** if you need a type to change, edit
+`packages/contract/openapi.yaml`, then run `npm run gen`. Never edit
+`packages/contract/src/types.gen.ts` directly.
