@@ -1,4 +1,4 @@
-# @equipment-hub/contract
+# Equipment-hub/contract
 
 This package turns `openapi.yaml` — the single source of truth for the API —
 into TypeScript types that both `apps/backend` and `apps/frontend` import.
