@@ -1,4 +1,4 @@
-# Equipment-hub/contract
+# Generate Shared TypeScript Types
 
 This package turns `openapi.yaml` — the single source of truth for the API —
 into TypeScript types that both `apps/backend` and `apps/frontend` import.
