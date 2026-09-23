@@ -1,4 +1,4 @@
-# Prompt 6 — Generate Shared TypeScript Types
+# Prompt 6 Generate Shared TypeScript Types
 
 This README explains, step by step, what was done in `packages/contract` to
 turn the OpenAPI spec into TypeScript types shared by both `apps/backend`
